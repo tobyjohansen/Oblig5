@@ -28,8 +28,8 @@ class ConnThread(threading.Thread):
         self.name = name
         self.addr = addr
         self.conn = conn
-        self.p1_position = ""
-        self.p2_position = ""
+        self.p1_x_position = 50
+        self.p2_x_position = 0
 
     def run(self):
         p1_position = ()
@@ -38,6 +38,9 @@ class ConnThread(threading.Thread):
         print(f"connected by {self.addr}")
         msg = str(self.threadID).encode("utf_8")
         self.conn.send(msg)
+
+        # Player Position var
+        p1_x_position = 0
         while True:
             data = self.conn.recv(1024)
             if not data:
@@ -45,29 +48,14 @@ class ConnThread(threading.Thread):
 
             # Get player positions and upgdate
             if self.threadID == 0:
-                p1_position = data.decode("utf_8")
-                print(f"p1 Position is: {self.p1_position}")
-            if self.threadID == 1:
-                p2_position = data.decode("utf_8")
-                print(f"p2 Position is: {self.p2_position}")
+                msg = data.decode("utf_8")
+                p1_x_position = str(msg)
+                print(msg)
 
-            # Send player position to clients
-            if self.threadID == 0:
-                message_p2_position_data = str(p2_position)
-                msg_p2_pd = message_p2_position_data.encode("utf_8")
-                self.conn.send(msg_p2_pd)
-                print("Sendt p2 positon to p1")
-            if self.threadID == 1:
-                message_p1_position_data = str(p1_position)
-                msg_p1_pd = message_p1_position_data.encode("utf_8")
-                self.conn.send(msg_p1_pd)
+            msg = p1_x_position.encode("utf_8")
+            self.conn.send(msg)
+            print("ThreadID1 Testing sending msg")
 
-
-
-            self.conn.sendall(data)
-
-            msg = data.decode("utf_8")
-            print(msg)
         self.conn.close()
 
 
