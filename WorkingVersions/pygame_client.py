@@ -130,9 +130,12 @@ if __name__ == '__main__':
             msg = str(player_x_position).encode("utf_8")
             client.client.send(msg)
         if playerNumber == 1:
-            data = client.client.recv(1024)
-            msg = data.decode("utf_8")
-            print(msg)
+            try:
+                info = client.client.recv(1024)
+            except:
+                pass
+            #msg = info.decode("utf_8")
+            #print(msg)
             print("Testing")
             """
             data = client.client.recv(1024)

@@ -5,7 +5,17 @@ import time
 server_ip = '127.0.0.1'
 server_port = 5555
 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+try:
+    s.bind((server_ip, server_port))
+except socket.error as e:
+    str(e)
+
+s.listen(2)
+print("Waiting for a connection, Server Started")
+
+"""
 class ServerNetwork:
     def __init__(self, host, port):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,7 +29,7 @@ class ServerNetwork:
             self.server.listen()
         except socket.error as e:
             str(e)
-
+"""
 
 class ConnThread(threading.Thread):
     def __init__(self, threadID, name, conn, addr):
@@ -59,12 +69,10 @@ class ConnThread(threading.Thread):
         self.conn.close()
 
 
-server = ServerNetwork(server_ip, server_port)
-connID = 0
 
+connID = 0
 while True:
-    server.listening()
-    conn, addr = server.server.accept()
+    conn, addr = s.accept()
     x = ConnThread(connID, "NoName", conn, addr)
     x.start()
     connID += 1

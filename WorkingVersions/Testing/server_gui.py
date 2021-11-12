@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
+import socket
+from _thread import *
 
 
 class MainWindow(tk.Tk):
@@ -25,7 +27,7 @@ class MenuFrame(tk.Frame):
 
 
         server_menu = tk.Menu(menu, tearoff=0)
-        server_menu.add_command(label="Start Server")
+        server_menu.add_command(label="Start Server", command=self.console.start_server)
         server_menu.add_command(label="Stop Server")
         server_menu.add_command(label="restart server")
         menu.add_cascade(label="Server", menu=server_menu)
@@ -55,7 +57,7 @@ class ConsoleFrame(tk.Frame):
         tk.Frame.__init__(self, root, bg="black", bd=5, highlightthickness=4)
         self.root = root
         self.place(height=500, width=400, y=0)
-        self.console = ["Test1", "Test2", "Test3"]
+        self.console = ["*This is the server Terminal*", "Here you can manage the server.", "start the server by writing 'start'", "and then click the run button.", "Or click server at the top left corner.", "Starting the server will close the gui"]
         self.console_window()
         self.input_console()
 
@@ -76,7 +78,7 @@ class ConsoleFrame(tk.Frame):
     def console_command(self):
         command = self.entry_console.get()
         if command == 'start':
-            pass
+            self.start_server()
         elif command == 'stop':
             pass
         elif command == 'exit':
@@ -90,7 +92,76 @@ class ConsoleFrame(tk.Frame):
             self.console_window()
 
     def start_server(self):
-        pass
+        app.destroy()
+        # The gui windows gets removed when the server starts.
+
+        # The Server code
+        server_ip = "127.0.0.1"
+        port = 5555
+
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        try:
+            server.bind((server_ip, port))
+        except socket.error as e:
+            str(e)
+
+        server.listen(2)
+        print("Waiting for a connection with a client...")
+
+        # Code from techwithtim
+        def read_pos(str):
+            str = str.split(",")
+            return int(str[0]), int(str[1])
+
+        def make_pos(tup):
+            return str(tup[0]) + "," + str(tup[1])
+
+        # Set player Starting Position
+        pos = [(50, 200), (350, 200), (200, 200)]
+
+        # This is the code that is running in the thread
+        def thread_client(conn, connID):
+
+            # Sends starting position to the client
+            conn.send(str.encode(make_pos(pos[connID])))
+            answer = ""
+
+            # Sends client number to the client
+            msg = str(connID).encode("utf_8")
+            conn.send(msg)
+
+            # Main loop of the thread
+            while True:
+                try:
+                    data = read_pos(conn.recv(2048).decode())
+                    pos[connID] = data
+
+                    if not data:
+                        break
+                    else:
+                        if connID == 1:
+                            reply = pos[0] + pos[2]
+                        else:
+                            reply = pos[1] + pos[2]
+
+                        print("Received: ", data)
+                        print("Sending : ", reply)
+
+                    conn.sendall(str.encode(make_pos(reply)))
+                except:
+                    break
+            print("Lost connection")
+            conn.close()
+        # Set variables
+        connID = 0
+
+        # Accepts connection and starts a new thread for each connection
+        while True:
+            conn, addr = server.accept()
+            start_new_thread(thread_client, (conn, connID))
+            connID += 1
+
 
     def stop_server(self):
         pass
@@ -100,6 +171,7 @@ class ConsoleFrame(tk.Frame):
 
     def clear_console(self):
         self.listbox.delete(0, tk.END)
+        self.console = []
 
     def help_console(self):
         self.help_info = ["**This is a Guide to the Terminal Commands**", "Current Commands:",
@@ -115,8 +187,12 @@ class ConsoleFrame(tk.Frame):
         print("Run the Update_console")
 
 
-if __name__ == "__main__":
-    app = MainWindow(None)
-    console = ConsoleFrame(None)
-    top_menu = MenuFrame(None, console)
+
+app = MainWindow(None)
+console = ConsoleFrame(None)
+top_menu = MenuFrame(None, console)
+
+def main():
     app.mainloop()
+
+main()

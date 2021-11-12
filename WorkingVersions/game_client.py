@@ -17,7 +17,7 @@ class ClientNetwork:
         except socket.error as e:
             str(e)
 
-    def send_data(self,message):
+    def send_data(self, message):
         message = str(message)
         msg = message.encode("utf_8")
         self.client.send(msg)
